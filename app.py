@@ -2,43 +2,55 @@ from fastapi import FastAPI
 import gradio as gr
 import random
 
-# Create FastAPI app
+# FastAPI app
 app = FastAPI()
 
-# Store history
+# History storage
 history = []
 
 # Keywords
 spam_words = ["offer", "win", "free", "lottery", "prize"]
 important_words = ["urgent", "asap", "meeting", "important"]
 
-# Classification function
+# MAIN AI FUNCTION
 def classify_email(text):
     text_lower = text.lower()
 
-    if any(word in text_lower for word in spam_words):
+    spam_score = sum(word in text_lower for word in spam_words)
+    important_score = sum(word in text_lower for word in important_words)
+
+    if spam_score > 0:
         label = "🔴 Spam"
         confidence = random.randint(85, 98)
-    elif any(word in text_lower for word in important_words):
+        reason = "Contains promotional/spam keywords"
+    elif important_score > 0:
         label = "🟡 Important"
         confidence = random.randint(75, 90)
+        reason = "Contains urgency-related keywords"
     else:
         label = "🟢 Normal"
         confidence = random.randint(70, 85)
+        reason = "No spam or urgency signals detected"
 
     result = f"{label} ({confidence}%)"
+    full_output = f"{result}\n\n💡 Reason: {reason}"
 
     # Save history
-    history.append({"email": text, "result": result})
-
-    # Keep only last 5
-    if len(history) > 5:
+    history.append(label)
+    if len(history) > 10:
         history.pop(0)
 
-    return result, history
+    # Chart data
+    chart_data = {
+        "🔴 Spam": history.count("🔴 Spam"),
+        "🟡 Important": history.count("🟡 Important"),
+        "🟢 Normal": history.count("🟢 Normal")
+    }
+
+    return full_output, chart_data
 
 
-# API Endpoint
+# API endpoint
 @app.post("/classify")
 def classify_api(data: dict):
     text = data.get("text", "")
@@ -46,36 +58,83 @@ def classify_api(data: dict):
     return {"result": result}
 
 
-# Gradio UI
-with gr.Blocks() as demo:
-    gr.Markdown("# 🚀 Ryvox Email Classifier")
+# 🎨 HACKATHON UI
+with gr.Blocks(
+    theme=gr.themes.Soft(primary_hue="purple", secondary_hue="pink"),
+    css="""
+    body {
+        background: linear-gradient(135deg, #1a0033, #330066, #4d0099);
+    }
+
+    .gradio-container {
+        background: transparent !important;
+    }
+
+    h1 {
+        text-align: center;
+        font-size: 40px;
+        color: #ffffff;
+        text-shadow: 0 0 20px #a855f7;
+    }
+
+    .card {
+        background: rgba(255,255,255,0.05);
+        border-radius: 15px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 0 25px rgba(168,85,247,0.4);
+    }
+
+    button {
+        background: linear-gradient(90deg, #9333ea, #ec4899);
+        color: white !important;
+        border-radius: 10px !important;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+
+    button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 15px #ec4899;
+    }
+
+    textarea {
+        background: rgba(0,0,0,0.4) !important;
+        color: white !important;
+        border-radius: 10px !important;
+    }
+    """
+) as demo:
+
+    gr.Markdown("# 🚀 Ryvox AI Email Analyzer")
 
     with gr.Row():
-        with gr.Column():
+        with gr.Column(elem_classes="card"):
             text_input = gr.Textbox(
-                label="📩 Enter Email Text",
-                placeholder="Type email content here..."
+                label="📩 Enter Email",
+                placeholder="Paste email content here...",
+                lines=5
             )
 
-            submit_btn = gr.Button("🚀 Classify")
+            analyze_btn = gr.Button("🚀 Analyze Email")
             clear_btn = gr.Button("🧹 Clear")
 
-        with gr.Column():
-            output_text = gr.Textbox(label="📊 Result")
-            history_box = gr.JSON(label="📜 Last 5 Emails")
+        with gr.Column(elem_classes="card"):
+            result_output = gr.Textbox(label="🎯 Result + Reason")
+            chart_output = gr.Label(label="📊 Classification Stats")
 
-    # Button actions
-    submit_btn.click(
+    # Actions
+    analyze_btn.click(
         fn=classify_email,
         inputs=text_input,
-        outputs=[output_text, history_box],
+        outputs=[result_output, chart_output],
         show_progress=True
     )
 
     clear_btn.click(
-        fn=lambda: ("", []),
+        fn=lambda: ("", {}),
         inputs=[],
-        outputs=[output_text, history_box]
+        outputs=[result_output, chart_output]
     )
 
 
