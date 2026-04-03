@@ -4,6 +4,7 @@ from models import RyvoxEmailObservation, RyvoxEmailAction
 
 class RyvoxEmailEnvironment:
     def __init__(self):
+        random.seed(42)
         # Dataset with difficulty levels
         self.dataset = [
             {"text": "Win $1000 now!", "label": "spam", "difficulty": "easy"},
