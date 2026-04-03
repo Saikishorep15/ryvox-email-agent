@@ -1,9 +1,14 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 from environment import RyvoxEmailEnvironment
-from models import RyvoxEmailAction
 
 app = FastAPI()
 env = RyvoxEmailEnvironment()
+
+
+class Action(BaseModel):
+    action: str
+
 
 @app.post("/reset")
 def reset():
@@ -16,8 +21,9 @@ def reset():
         }
     }
 
+
 @app.post("/step")
-def step(action: RyvoxEmailAction):
+def step(action: Action):
     obs, reward, done, _ = env.step(action)
 
     return {
@@ -30,6 +36,17 @@ def step(action: RyvoxEmailAction):
         "done": done
     }
 
+
 @app.get("/")
 def root():
     return {"message": "Ryvox Email Environment Running 🚀"}
+
+
+# ✅ REQUIRED FOR OPENENV (VERY IMPORTANT)
+def main():
+    return app
+
+
+# ✅ REQUIRED ENTRY POINT
+if __name__ == "__main__":
+    main()
