@@ -10,7 +10,16 @@ def classify_email(email):
     if not email.strip():
         return "⚠️ Please enter email text", history
 
-    email_lower = email.lower()
+    # 🔹 Get task from environment
+    obs = env.reset()
+    current_state = env.state()
+
+    correct_label = current_state["label"]
+    difficulty = current_state["difficulty"]
+    email_text = current_state["email_text"]
+
+    # 🔹 Agent decision logic
+    email_lower = email_text.lower()
 
     if "win" in email_lower or "offer" in email_lower or "money" in email_lower:
         action_value = "spam"
@@ -24,7 +33,7 @@ def classify_email(email):
 
     confidence = int(reward * 100)
 
-    # 🔥 Styled Output
+    # 🔹 Output format
     if action_value == "spam":
         result = f"🚨 SPAM ({confidence}%)"
     elif action_value == "important":
@@ -32,9 +41,13 @@ def classify_email(email):
     else:
         result = f"✅ NORMAL ({confidence}%)"
 
+    # 🔥 REQUIRED HISTORY FORMAT
     history.append({
-        "email": email,
-        "result": result
+        "email": email_text,
+        "action": action_value,
+        "correct_label": correct_label,
+        "reward": reward,
+        "difficulty": difficulty
     })
 
     return result, history
