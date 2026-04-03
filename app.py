@@ -10,15 +10,14 @@ def classify_email(email):
     if not email.strip():
         return "⚠️ Please enter email text", history
 
-    # 🔹 Get task from environment
+    # Use environment
     obs = env.reset()
-    current_state = env.state()
+    state = env.state()
 
-    correct_label = current_state["label"]
-    difficulty = current_state["difficulty"]
-    email_text = current_state["email_text"]
+    email_text = state["email_text"]
+    correct_label = state["label"]
+    difficulty = state["difficulty"]
 
-    # 🔹 Agent decision logic
     email_lower = email_text.lower()
 
     if "win" in email_lower or "offer" in email_lower or "money" in email_lower:
@@ -33,7 +32,6 @@ def classify_email(email):
 
     confidence = int(reward * 100)
 
-    # 🔹 Output format
     if action_value == "spam":
         result = f"🚨 SPAM ({confidence}%)"
     elif action_value == "important":
@@ -41,7 +39,7 @@ def classify_email(email):
     else:
         result = f"✅ NORMAL ({confidence}%)"
 
-    # 🔥 REQUIRED HISTORY FORMAT
+    # RL history
     history.append({
         "email": email_text,
         "action": action_value,
@@ -58,39 +56,40 @@ def clear_all():
     return "", "", []
 
 
-# 🎨 PREMIUM CLEAN CSS
+# 🔥 ONLY EXPANDED SIZE (NO DESIGN CHANGE)
 css = """
 body {
-    background: linear-gradient(135deg, #0f172a, #1e293b);
+    background: #0f172a;
 }
 
-/* Center container */
+/* 🔥 EXPAND FULL WIDTH */
 .gradio-container {
-    max-width: 1100px !important;
+    max-width: 1400px !important;
     margin: auto;
 }
 
-/* Card look */
+/* 🔥 BIGGER BOX */
 #main-box {
     background: #1e293b;
-    padding: 30px;
+    padding: 50px;
     border-radius: 15px;
-    box-shadow: 0px 0px 25px rgba(0,0,0,0.4);
+    width: 100%;
 }
 
 /* Title */
 #title {
     text-align: center;
-    font-size: 32px;
+    font-size: 34px;
     font-weight: bold;
     color: white;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
+/* Subtitle */
 #subtitle {
     text-align: center;
     color: #94a3b8;
-    margin-bottom: 25px;
+    margin-bottom: 30px;
 }
 
 /* Input */
@@ -98,18 +97,20 @@ textarea {
     background: #0f172a !important;
     color: white !important;
     border-radius: 10px !important;
+    font-size: 16px;
 }
 
 /* Buttons */
 button {
     border-radius: 10px !important;
     font-weight: bold;
-    height: 45px;
+    height: 50px;
+    font-size: 16px;
 }
 
-/* Result box */
+/* Result */
 #result-box {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
     text-align: center;
 }
@@ -126,7 +127,7 @@ with gr.Blocks(css=css) as demo:
         email_input = gr.Textbox(
             label="Enter Email Content",
             placeholder="Paste email content here...",
-            lines=4
+            lines=5
         )
 
         with gr.Row():
@@ -135,8 +136,8 @@ with gr.Blocks(css=css) as demo:
 
         output = gr.Textbox(label="Result", elem_id="result-box")
 
-        history_box = gr.JSON(label="📜 History")
-
+        gr.Markdown("### 📊 Evaluation History (Agent Performance)")
+        history_box = gr.JSON(label="History")
 
         classify_btn.click(classify_email, inputs=email_input, outputs=[output, history_box])
         clear_btn.click(clear_all, outputs=[email_input, output, history_box])
