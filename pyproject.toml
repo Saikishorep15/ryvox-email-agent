@@ -5,12 +5,17 @@ description = "Ryvox AI Email Classification Environment"
 authors = [
     { name = "SaiKishore P" }
 ]
+
 dependencies = [
     "fastapi",
     "uvicorn",
     "pydantic",
-    "gradio"
+    "gradio",
+    "openenv>=0.1.13"
 ]
+
+[project.scripts]
+server = "server.app:app"
 
 [build-system]
 requires = ["setuptools"]
