@@ -57,4 +57,4 @@ with gr.Blocks() as demo:
     btn.click(fn=classify, inputs=email_input, outputs=output)
 
 # 🔥 CRITICAL LINE
-app = gr.mount_gradio_app(app, demo, path="/")
+app = gr.mount_gradio_app(app, demo, path="/ui")
