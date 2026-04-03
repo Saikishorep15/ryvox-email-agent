@@ -9,16 +9,24 @@ class RyvoxEmailEnvironment:
         self.dataset = [
             {"text": "Win $1000 now!", "label": "spam", "difficulty": "easy"},
             {"text": "Limited time offer just for you", "label": "spam", "difficulty": "medium"},
+            {"text": "URGENT: Update your bank details now", "label": "spam", "difficulty": "hard"},
             {"text": "Let's discuss the financial report tomorrow", "label": "important", "difficulty": "hard"},
             {"text": "Project meeting at 5 PM", "label": "important", "difficulty": "easy"},
-            {"text": "Hey, how are you?", "label": "normal", "difficulty": "easy"}
+            {"text": "Client meeting scheduled for tomorrow", "label": "important", "difficulty": "medium"},
+            {"text": "Hey, how are you?", "label": "normal", "difficulty": "easy"},
+            {"text": "Lunch at 2?", "label": "normal", "difficulty": "easy"}
         ]
 
         self.current_task = None
+        self.steps = 0
+        self.max_steps = 3
+        self.history = []
 
-    # RESET
+    # 🔹 RESET
     def reset(self):
         self.current_task = random.choice(self.dataset)
+        self.steps = 0
+        self.history = []
 
         return RyvoxEmailObservation(
             email_text=self.current_task["text"],
@@ -26,14 +34,15 @@ class RyvoxEmailEnvironment:
             done=False
         )
 
-    # STEP
+    # 🔹 STEP (MULTI-STEP RL)
     def step(self, action: RyvoxEmailAction):
         if not self.current_task:
             self.current_task = random.choice(self.dataset)
 
-        # Extract action safely
+        self.steps += 1
+
         try:
-            action_value = str(action.action).lower()
+            action_value = str(action.action).lower().strip()
         except:
             action_value = ""
 
@@ -41,7 +50,7 @@ class RyvoxEmailEnvironment:
         email_text = self.current_task["text"].lower()
         difficulty = self.current_task["difficulty"]
 
-        # 🔥 SMART KEYWORD LOGIC
+        # 🔥 KEYWORDS
         spam_keywords = [
             "win", "offer", "money", "bet", "betting", "gambling",
             "casino", "lottery", "prize", "free", "bonus",
@@ -59,37 +68,59 @@ class RyvoxEmailEnvironment:
         important_score = sum(email_text.count(word) for word in important_keywords)
 
         length_factor = max(1, len(email_text.split()) / 50)
+        spam_score /= length_factor
+        important_score /= length_factor
 
-        spam_score = spam_score / length_factor
-        important_score = important_score / length_factor
+        # 🔥 CONFIDENCE
+        max_score = max(spam_score, important_score, 1)
+        spam_conf = min(1.0, spam_score / max_score)
+        imp_conf = min(1.0, important_score / max_score)
 
         # 🎯 REWARD LOGIC
-        if action_value == correct_label:
-            if difficulty == "easy":
-                reward = 0.3
-            elif difficulty == "medium":
-                reward = 0.6
+        if action_value not in ["spam", "important", "normal"]:
+            reward = -1.0
+
+        elif action_value == correct_label:
+            base = {"easy": 0.4, "medium": 0.7, "hard": 1.0}[difficulty]
+
+            if action_value == "spam":
+                reward = base + 0.3 * spam_conf
+            elif action_value == "important":
+                reward = base + 0.3 * imp_conf
             else:
-                reward = 1.0
-
-        elif spam_score >= 1:
-            reward = 0.3 if action_value == "spam" else -0.2
-
-        elif important_score >= 0.5:
-            reward = 0.3 if action_value == "important" else -0.2
+                reward = base
 
         else:
-            reward = 0.3 if action_value == "normal" else -0.2
+            if spam_score >= 1 and action_value == "spam":
+                reward = 0.2
+            elif important_score >= 0.5 and action_value == "important":
+                reward = 0.2
+            else:
+                reward = -0.5
+
+        reward = max(-1.0, min(1.0, reward))
+
+        # 🧠 HISTORY TRACKING
+        self.history.append({
+            "action": action_value,
+            "reward": reward
+        })
+
+        done = self.steps >= self.max_steps or action_value == correct_label
+
+        # 🧠 PROGRESSIVE BONUS
+        if done and action_value == correct_label:
+            reward += 0.2  # final success bonus
 
         obs = RyvoxEmailObservation(
-            email_text="Task Complete",
+            email_text="Task Complete" if done else self.current_task["text"],
             reward=reward,
-            done=True
+            done=done
         )
 
-        return obs, reward, True, {}
+        return obs, reward, done, {}
 
-    # STATE
+    # 🔹 STATE (RICH STATE)
     def state(self):
         if not self.current_task:
             return {}
@@ -97,7 +128,9 @@ class RyvoxEmailEnvironment:
         return {
             "email_text": self.current_task["text"],
             "label": self.current_task["label"],
-            "difficulty": self.current_task["difficulty"]
+            "difficulty": self.current_task["difficulty"],
+            "steps_taken": self.steps,
+            "history": self.history
         }
 
     def close(self):
