@@ -4,7 +4,6 @@ import random
 
 app = FastAPI()
 
-# ================= DATA =================
 history = []
 
 spam_words = ["offer", "win", "free", "lottery", "prize"]
@@ -34,14 +33,7 @@ def classify_email(text):
         "Normal": history.count("Normal")
     }
 
-    result = f"""
-📌 Classification: {label}
-📊 Confidence: {conf}%
-
-💡 Reason:
-{reason}
-"""
-
+    result = f"{label} ({conf}%)\n\n{reason}"
     return result, stats
 
 
@@ -52,125 +44,83 @@ def classify_api(data: dict):
     return {"result": result}
 
 
-# ================= PRO CSS =================
+# ================= CSS =================
 css = """
 body {
-    margin: 0;
+    background: #f8fafc;
     font-family: Inter, sans-serif;
-    background: #0b0f19;
 }
 
-/* LAYOUT */
-.app {
-    display: flex;
-    height: 100vh;
+/* CENTER CONTAINER */
+.container {
+    max-width: 700px;
+    margin: auto;
+    padding-top: 60px;
 }
 
-/* SIDEBAR */
-.sidebar {
-    width: 220px;
-    background: #111827;
-    border-right: 1px solid #1f2937;
-    padding: 20px;
-}
-
-.sidebar h2 {
-    color: #a855f7;
-    font-size: 18px;
+/* TITLE */
+h1 {
+    text-align: center;
+    color: #6d28d9;
+    font-weight: 600;
     margin-bottom: 30px;
 }
 
-.nav-item {
-    color: #9ca3af;
-    margin-bottom: 15px;
-    cursor: pointer;
-}
-
-.nav-item:hover {
-    color: #ffffff;
-}
-
-/* MAIN */
-.main {
-    flex: 1;
-    padding: 25px;
-}
-
-/* HEADER */
-.header {
-    font-size: 20px;
-    font-weight: 600;
-    color: #e5e7eb;
-    margin-bottom: 20px;
-}
-
-/* CARDS */
+/* CARD */
 .card {
-    background: #111827;
-    border: 1px solid #1f2937;
+    background: white;
     border-radius: 12px;
     padding: 20px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 20px;
 }
 
 /* INPUT */
 textarea {
-    background: #020617 !important;
-    color: #e5e7eb !important;
-    border: 1px solid #334155 !important;
+    border-radius: 8px !important;
+    border: 1px solid #d1d5db !important;
 }
 
 /* BUTTON */
 button {
     background: #7c3aed;
+    color: white !important;
     border-radius: 8px !important;
+    font-weight: 500;
 }
+
 button:hover {
     background: #6d28d9;
+}
+
+/* OUTPUT */
+textarea[readonly] {
+    background: #f1f5f9 !important;
 }
 """
 
 # ================= UI =================
 with gr.Blocks(css=css) as demo:
 
-    with gr.Row(elem_classes="app"):
+    with gr.Column(elem_classes="container"):
 
-        # SIDEBAR
-        with gr.Column(elem_classes="sidebar", scale=0):
-            gr.HTML("<h2>Ryvox AI</h2>")
-            gr.HTML("<div class='nav-item'>📊 Dashboard</div>")
-            gr.HTML("<div class='nav-item'>📧 Analyzer</div>")
-            gr.HTML("<div class='nav-item'>⚙ Settings</div>")
+        gr.Markdown("# Email Analyzer")
 
-        # MAIN CONTENT
-        with gr.Column(elem_classes="main"):
-
-            gr.HTML("<div class='header'>Email Analyzer</div>")
+        # INPUT
+        with gr.Group(elem_classes="card"):
+            text = gr.Textbox(
+                lines=6,
+                placeholder="Paste email content..."
+            )
 
             with gr.Row():
+                analyze = gr.Button("Analyze")
+                clear = gr.Button("Clear")
 
-                # INPUT CARD
-                with gr.Column(scale=1):
-                    with gr.Group(elem_classes="card"):
-                        gr.Markdown("### Input Email")
-
-                        text = gr.Textbox(
-                            lines=10,
-                            placeholder="Paste email content..."
-                        )
-
-                        with gr.Row():
-                            analyze = gr.Button("Analyze")
-                            clear = gr.Button("Clear")
-
-                # OUTPUT CARD
-                with gr.Column(scale=1):
-                    with gr.Group(elem_classes="card"):
-                        gr.Markdown("### Result")
-                        output = gr.Textbox(lines=10)
-
-                    with gr.Group(elem_classes="card"):
-                        gr.Markdown("### Stats")
-                        stats = gr.Label()
+        # OUTPUT
+        with gr.Group(elem_classes="card"):
+            output = gr.Textbox(label="Result", lines=5)
+            stats = gr.Label(label="Stats")
 
     # ACTIONS
     analyze.click(classify_email, text, [output, stats])
