@@ -1,5 +1,38 @@
+import os
 from environment import RyvoxEmailEnvironment
 from models import RyvoxEmailAction
+from openai import OpenAI
+
+# 🔑 ENV VARIABLES (MANDATORY)
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
+HF_TOKEN = os.getenv("HF_TOKEN", "")
+
+client = OpenAI(
+    api_key=HF_TOKEN,
+    base_url=API_BASE_URL
+)
+
+env = RyvoxEmailEnvironment()
+
+
+def get_ai_action(email):
+    prompt = f"""
+Classify the email into: spam, important, normal.
+
+Email:
+{email}
+
+Answer ONLY one word.
+"""
+
+    response = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    return response.choices[0].message.content.strip().lower()
+
 
 def fallback_action(email):
     email = email.lower()
@@ -13,55 +46,36 @@ def fallback_action(email):
 
 
 def run():
-    print("🚀 Starting Evaluation...\n")
+    print("[START] Evaluation Started")
 
     total_reward = 0
     episodes = 5
 
     for i in range(episodes):
-        print(f"--- Episode {i+1} ---")
-
-        res = requests.post(f"{BASE_URL}/reset")
-        data = res.json()["observation"]
-
-        email = data["email_text"]
-        print(f"📩 Email: {email}")
-
-        action = fallback_action(email)
-        print(f"🤖 Action: {action}")
-
-        res = requests.post(f"{BASE_URL}/step", json={"action": action})
-        result = res.json()
-
-        reward = result["reward"]
-        total_reward += reward
-
-        print(f"🎯 Reward: {reward}\n")
-
-    final_score = total_reward / episodes
-    print(f"📊 FINAL SCORE: {round(final_score, 2)}")
-
-    # 🔁 Evaluation Loop (Hackathon requirement ✅)
-    for i in range(5):
-        print(f"\n--- Episode {i+1} ---")
+        print(f"[STEP] Episode {i+1}")
 
         obs = env.reset()
         email = obs.email_text
 
-        print(f"📩 Email: {email}")
+        print(f"[STEP] Email: {email}")
 
-        action_value = fallback_action(email)
-        print(f"🤖 Action: {action_value}")
+        try:
+            action_value = get_ai_action(email)
+        except:
+            action_value = fallback_action(email)
+
+        print(f"[STEP] Action: {action_value}")
 
         action = RyvoxEmailAction(action=action_value)
-
         obs, reward, done, _ = env.step(action)
 
-        print(f"🎯 Reward: {reward}")
+        print(f"[STEP] Reward: {reward}")
 
         total_reward += reward
 
-    print("\n📊 FINAL SCORE:", round(total_reward / 5, 2))
+    final_score = total_reward / episodes
+
+    print(f"[END] Final Score: {round(final_score, 2)}")
 
 
 if __name__ == "__main__":
