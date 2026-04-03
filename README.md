@@ -1,65 +1,40 @@
----
-title: Ryvox Email Agent V1
-emoji: 📧
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-app_file: app.py
-pinned: false
----
+# 🚀 Ryvox AI Email Environment
 
-# 🚀 Ryvox Email RL Environment
+An OpenEnv-compliant reinforcement learning environment for **email classification**.
 
-## 🎯 Problem
-Email classification is a real-world task where systems must identify spam, important, and normal emails efficiently.
-
-## 💡 Solution
-We built a Reinforcement Learning environment where an agent learns to classify emails based on rewards.
-
----
-
-## ⚙️ Environment Design
-
-### State
-- Email text
-
-### Actions
+This project simulates a real-world task where an AI agent classifies emails into:
 - Spam
 - Important
 - Normal
 
-### Tasks (Difficulty Levels)
-- Easy
-- Medium
-- Hard
+---
+
+## 🎯 Problem Statement
+
+Email classification is a real-world task used in:
+- Gmail spam filters
+- Enterprise email systems
+- Customer support automation
+
+This environment allows an AI agent to learn and improve classification decisions using reward-based feedback.
 
 ---
 
-## 🎁 Reward Function
+## ⚙️ OpenEnv Specification
 
-- Correct classification → **1.0**
-- Partial correct → **0.3**
-- Incorrect → **0.0**
-
----
-
-## 🔁 API
-
-- `reset(difficulty)`
-- `state()`
-- `step(action)`
+✔ Typed Models (Pydantic)  
+✔ step() / reset() / state() API  
+✔ Reward-based learning  
+✔ YAML configuration  
 
 ---
 
-## 🤖 Baseline Agent
-Random agent implemented in `inference.py`
+## 🧠 Environment Details
 
----
-
-## 🌍 Deployment
-Deployed using FastAPI + Gradio on Hugging Face Spaces.
-
----
-
-## 🔥 Bonus
-Includes interactive UI for visualization.
+### Observation
+```json
+{
+  "email_text": "Win $1000 now!",
+  "reward": 0.0,
+  "done": false
+}
