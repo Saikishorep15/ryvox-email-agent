@@ -13,11 +13,33 @@ def fallback_action(email):
 
 
 def run():
-    print("🚀 Connecting to Ryvox Email Environment...")
-
-    env = RyvoxEmailEnvironment()
+    print("🚀 Starting Evaluation...\n")
 
     total_reward = 0
+    episodes = 5
+
+    for i in range(episodes):
+        print(f"--- Episode {i+1} ---")
+
+        res = requests.post(f"{BASE_URL}/reset")
+        data = res.json()["observation"]
+
+        email = data["email_text"]
+        print(f"📩 Email: {email}")
+
+        action = fallback_action(email)
+        print(f"🤖 Action: {action}")
+
+        res = requests.post(f"{BASE_URL}/step", json={"action": action})
+        result = res.json()
+
+        reward = result["reward"]
+        total_reward += reward
+
+        print(f"🎯 Reward: {reward}\n")
+
+    final_score = total_reward / episodes
+    print(f"📊 FINAL SCORE: {round(final_score, 2)}")
 
     # 🔁 Evaluation Loop (Hackathon requirement ✅)
     for i in range(5):
