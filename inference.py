@@ -1,30 +1,5 @@
-import requests
-import os
-from openai import OpenAI
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-BASE_URL = "http://127.0.0.1:8000"
-
-
-def get_ai_action(email):
-    prompt = f"""
-Classify the following email into one of these categories:
-spam, important, normal
-
-Email:
-{email}
-
-Answer ONLY one word: spam / important / normal
-"""
-
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    return response.choices[0].message.content.strip().lower()
-
+from environment import RyvoxEmailEnvironment
+from models import RyvoxEmailAction
 
 def fallback_action(email):
     email = email.lower()
@@ -40,32 +15,31 @@ def fallback_action(email):
 def run():
     print("🚀 Connecting to Ryvox Email Environment...")
 
-    res = requests.post(f"{BASE_URL}/reset")
-    data = res.json()["observation"]
+    env = RyvoxEmailEnvironment()
 
-    email = data["email_text"]
-    print(f"📩 Email: {email}")
+    total_reward = 0
 
-    if os.getenv("OPENAI_API_KEY"):
-        try:
-            print("🤖 Using OpenAI Agent...")
-            action = get_ai_action(email)
-        except:
-            print("⚠️ OpenAI failed, using fallback")
-            action = fallback_action(email)
-    else:
-        print("⚠️ No API key, using fallback")
-        action = fallback_action(email)
+    # 🔁 Evaluation Loop (Hackathon requirement ✅)
+    for i in range(5):
+        print(f"\n--- Episode {i+1} ---")
 
-    print(f"🤖 Action: {action}")
+        obs = env.reset()
+        email = obs.email_text
 
-    res = requests.post(f"{BASE_URL}/step", json={"action": action})
-    result = res.json()
+        print(f"📩 Email: {email}")
 
-    print(f"✅ Reward: {result['reward']} | Done: {result['done']}")
+        action_value = fallback_action(email)
+        print(f"🤖 Action: {action_value}")
 
-    if result["done"]:
-        print("🔥 Task Complete")
+        action = RyvoxEmailAction(action=action_value)
+
+        obs, reward, done, _ = env.step(action)
+
+        print(f"🎯 Reward: {reward}")
+
+        total_reward += reward
+
+    print("\n📊 FINAL SCORE:", round(total_reward / 5, 2))
 
 
 if __name__ == "__main__":
