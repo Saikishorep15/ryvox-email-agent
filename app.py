@@ -1,14 +1,17 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 import gradio as gr
 from environment import RyvoxEmailEnvironment
-from models import RyvoxEmailAction
 
-# FastAPI
+# ---------------- INIT ----------------
 app = FastAPI()
 env = RyvoxEmailEnvironment()
 
+# ---------------- MODEL ----------------
+class Action(BaseModel):
+    action: str
 
-# ---------------- API (REQUIRED) ----------------
+# ---------------- API (VERY IMPORTANT) ----------------
 @app.post("/reset")
 def reset():
     obs = env.reset()
@@ -20,9 +23,8 @@ def reset():
         }
     }
 
-
 @app.post("/step")
-def step(action: RyvoxEmailAction):
+def step(action: Action):
     obs, reward, done, _ = env.step(action)
 
     return {
@@ -35,29 +37,24 @@ def step(action: RyvoxEmailAction):
         "done": done
     }
 
-
 @app.get("/")
 def root():
     return {"message": "Ryvox Email Environment Running 🚀"}
 
-
-# ---------------- UI (OPTIONAL) ----------------
-def classify_email(text):
-    action = text.lower()
-    obs, reward, done, _ = env.step(RyvoxEmailAction(action=action))
+# ---------------- GRADIO UI ----------------
+def classify(email):
+    action = email.lower()
+    obs, reward, done, _ = env.step(Action(action=action))
     return f"{action.upper()} ({int(reward*100)}%)"
-
 
 with gr.Blocks() as demo:
     gr.Markdown("# 🚀 Ryvox Email Classifier")
 
-    input_box = gr.Textbox(label="Enter Email")
-    output_box = gr.Textbox(label="Result")
+    email_input = gr.Textbox(label="Enter Email", lines=5)
+    output = gr.Textbox(label="Result")
 
     btn = gr.Button("Classify")
+    btn.click(fn=classify, inputs=email_input, outputs=output)
 
-    btn.click(fn=classify_email, inputs=input_box, outputs=output_box)
-
-
-# 🔥 THIS IS KEY
+# 🔥 CRITICAL LINE
 app = gr.mount_gradio_app(app, demo, path="/")
