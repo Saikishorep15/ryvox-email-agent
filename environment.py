@@ -14,13 +14,9 @@ class RyvoxEmailEnvironment:
         ]
         self.current_task = None
 
-    # RESET
+    # 🔹 RESET
     def reset(self):
-        self.current_task = {
-    "text": "win money now!!!",
-    "label": "spam",
-    "difficulty": "easy"
-}
+        self.current_task = random.choice(self.dataset)
 
         return RyvoxEmailObservation(
             email_text=self.current_task["text"],
@@ -28,10 +24,10 @@ class RyvoxEmailEnvironment:
             done=False
         )
 
-    # STEP
+    # 🔹 STEP
     def step(self, action: RyvoxEmailAction):
         if not self.current_task:
-            self.current_task = self.dataset[0]
+            self.current_task = random.choice(self.dataset)
 
         # Extract action safely
         try:
@@ -43,23 +39,28 @@ class RyvoxEmailEnvironment:
             action_value = ""
 
         correct_label = self.current_task["label"]
-
-        # Use current email text for smart matching
         email_text = self.current_task["text"].lower()
+        difficulty = self.current_task["difficulty"]
 
-        # Reward logic (0 → 1 scale)
+        # 🎯 Reward logic (0.0 → 1.0 scale with partial signals)
         if action_value == correct_label:
-            reward = 1.0
+            if difficulty == "easy":
+                reward = 0.3
+            elif difficulty == "medium":
+                reward = 0.6
+            else:
+                reward = 1.0
 
         elif "win" in email_text or "offer" in email_text or "money" in email_text:
-            reward = 1.0 if action_value == "spam" else 0.3
+            reward = 0.3 if action_value == "spam" else -0.2
 
         elif "meeting" in email_text or "discuss" in email_text:
-            reward = 1.0 if action_value == "important" else 0.3
+            reward = 0.3 if action_value == "important" else -0.2
 
         else:
-            reward = 1.0 if action_value == "normal" else 0.3
+            reward = 0.3 if action_value == "normal" else -0.2
 
+        # Observation after step
         obs = RyvoxEmailObservation(
             email_text="Task Complete",
             reward=reward,
@@ -68,11 +69,17 @@ class RyvoxEmailEnvironment:
 
         return obs, reward, True, {}
 
-    # STATE (required)
+    # 🔹 STATE (OpenEnv required)
     def state(self):
+        if not self.current_task:
+            return {}
+
         return {
-            "current_task": self.current_task
+            "email_text": self.current_task["text"],
+            "label": self.current_task["label"],
+            "difficulty": self.current_task["difficulty"]
         }
 
+    # 🔹 CLOSE (optional)
     def close(self):
         pass
