@@ -1,3 +1,13 @@
+---
+title: Ryvox Email Agent
+emoji: 📧
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_file: app.py
+pinned: false
+---
+
 # 🚀 Ryvox Email Agent (OpenEnv)
 
 An AI-powered email classification environment built using the OpenEnv framework.  
