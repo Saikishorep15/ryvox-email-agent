@@ -3,17 +3,45 @@ from environment import RyvoxEmailEnvironment
 from models import RyvoxEmailAction
 from openai import OpenAI
 
-# 🔑 ENV VARIABLES (MANDATORY)
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
 HF_TOKEN = os.getenv("HF_TOKEN", "")
 
-client = OpenAI(
-    api_key=HF_TOKEN,
-    base_url=API_BASE_URL
-)
+client = OpenAI(api_key=HF_TOKEN, base_url=API_BASE_URL)
 
 env = RyvoxEmailEnvironment()
+
+
+def fallback_action(email):
+    email = email.lower()
+
+    spam_keywords = [
+        "win", "money", "offer", "bet", "betting", "gambling",
+        "casino", "lottery", "prize", "free", "bonus",
+        "click", "urgent", "limited", "exclusive",
+        "credit", "loan", "investment", "earn",
+        "guaranteed", "risk-free", "profit"
+    ]
+
+    important_keywords = [
+        "meeting", "project", "report", "discussion",
+        "deadline", "client", "schedule", "review"
+    ]
+
+    spam_score = sum(email.count(word) for word in spam_keywords)
+    important_score = sum(email.count(word) for word in important_keywords)
+
+    length_factor = max(1, len(email.split()) / 50)
+
+    spam_score = spam_score / length_factor
+    important_score = important_score / length_factor
+
+    if spam_score >= 1:
+        return "spam"
+    elif important_score >= 0.5:
+        return "important"
+    else:
+        return "normal"
 
 
 def get_ai_action(email):
@@ -32,17 +60,6 @@ Answer ONLY one word.
     )
 
     return response.choices[0].message.content.strip().lower()
-
-
-def fallback_action(email):
-    email = email.lower()
-
-    if "win" in email or "money" in email or "offer" in email:
-        return "spam"
-    elif "meeting" in email or "discuss" in email or "project" in email:
-        return "important"
-    else:
-        return "normal"
 
 
 def run():
@@ -67,6 +84,7 @@ def run():
         print(f"[STEP] Action: {action_value}")
 
         action = RyvoxEmailAction(action=action_value)
+
         obs, reward, done, _ = env.step(action)
 
         print(f"[STEP] Reward: {reward}")
