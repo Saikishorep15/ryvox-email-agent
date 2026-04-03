@@ -1,5 +1,5 @@
 ---
-title: Ryvox Email Agent
+title: Ryvox Email Agent V1
 emoji: 📧
 colorFrom: blue
 colorTo: indigo
