@@ -12,7 +12,7 @@ history = []
 spam_words = ["offer", "win", "free", "lottery", "prize"]
 important_words = ["urgent", "asap", "meeting", "important"]
 
-# MAIN AI FUNCTION
+# ================= AI FUNCTION =================
 def classify_email(text):
     text_lower = text.lower()
 
@@ -35,12 +35,10 @@ def classify_email(text):
     result = f"{label} ({confidence}%)"
     full_output = f"{result}\n\n💡 Reason: {reason}"
 
-    # Save history
     history.append(label)
     if len(history) > 10:
         history.pop(0)
 
-    # Chart data
     chart_data = {
         "🔴 Spam": history.count("🔴 Spam"),
         "🟡 Important": history.count("🟡 Important"),
@@ -50,7 +48,7 @@ def classify_email(text):
     return full_output, chart_data
 
 
-# API endpoint
+# ================= API =================
 @app.post("/classify")
 def classify_api(data: dict):
     text = data.get("text", "")
@@ -58,72 +56,107 @@ def classify_api(data: dict):
     return {"result": result}
 
 
-# 🎨 HACKATHON UI
-with gr.Blocks(
-    theme=gr.themes.Soft(primary_hue="purple", secondary_hue="pink"),
-    css="""
-    body {
-        background: linear-gradient(135deg, #1a0033, #330066, #4d0099);
-    }
+# ================= UI =================
+custom_css = """
+/* BACKGROUND */
+body {
+    background: radial-gradient(circle at top, #0f172a, #020617);
+    font-family: 'Inter', sans-serif;
+}
 
-    .gradio-container {
-        background: transparent !important;
-    }
+/* CONTAINER */
+.gradio-container {
+    background: transparent !important;
+}
 
-    h1 {
-        text-align: center;
-        font-size: 40px;
-        color: #ffffff;
-        text-shadow: 0 0 20px #a855f7;
-    }
+/* TITLE */
+h1 {
+    text-align: center;
+    font-size: 48px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #38bdf8, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 
-    .card {
-        background: rgba(255,255,255,0.05);
-        border-radius: 15px;
-        padding: 20px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 0 25px rgba(168,85,247,0.4);
-    }
+/* GLASS CARD */
+.card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 25px;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 0 40px rgba(56,189,248,0.15);
+    transition: 0.3s ease;
+}
 
-    button {
-        background: linear-gradient(90deg, #9333ea, #ec4899);
-        color: white !important;
-        border-radius: 10px !important;
-        font-weight: bold;
-        transition: 0.3s;
-    }
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 60px rgba(168,85,247,0.25);
+}
 
-    button:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 15px #ec4899;
-    }
+/* INPUT */
+textarea {
+    background: rgba(0,0,0,0.6) !important;
+    color: #e2e8f0 !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+}
 
-    textarea {
-        background: rgba(0,0,0,0.4) !important;
-        color: white !important;
-        border-radius: 10px !important;
-    }
-    """
-) as demo:
+/* BUTTON */
+button {
+    background: linear-gradient(135deg, #38bdf8, #a855f7);
+    border-radius: 12px !important;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
 
-    gr.Markdown("# 🚀 Ryvox AI Email Analyzer")
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(56,189,248,0.6);
+}
+
+/* OUTPUT BOX */
+textarea[readonly] {
+    background: rgba(15,23,42,0.8) !important;
+    border: 1px solid rgba(56,189,248,0.2) !important;
+}
+
+/* LABEL STYLE */
+label {
+    font-weight: 600 !important;
+    color: #cbd5f5 !important;
+}
+"""
+
+with gr.Blocks(css=custom_css) as demo:
+
+    gr.Markdown("# 🤖 Ryvox AI Email Analyzer")
 
     with gr.Row():
-        with gr.Column(elem_classes="card"):
+
+        # LEFT PANEL
+        with gr.Column(scale=1, elem_classes="card"):
+            gr.Markdown("### ✉️ Input Email")
+
             text_input = gr.Textbox(
-                label="📩 Enter Email",
-                placeholder="Paste email content here...",
-                lines=5
+                placeholder="Paste your email content here...",
+                lines=8
             )
 
-            analyze_btn = gr.Button("🚀 Analyze Email")
-            clear_btn = gr.Button("🧹 Clear")
+            with gr.Row():
+                analyze_btn = gr.Button("🚀 Analyze")
+                clear_btn = gr.Button("🧹 Clear")
 
-        with gr.Column(elem_classes="card"):
-            result_output = gr.Textbox(label="🎯 Result + Reason")
-            chart_output = gr.Label(label="📊 Classification Stats")
+        # RIGHT PANEL
+        with gr.Column(scale=1, elem_classes="card"):
+            gr.Markdown("### 📊 Analysis Result")
 
-    # Actions
+            result_output = gr.Textbox(lines=6)
+            chart_output = gr.Label()
+
+    # ACTIONS
     analyze_btn.click(
         fn=classify_email,
         inputs=text_input,
@@ -138,5 +171,5 @@ with gr.Blocks(
     )
 
 
-# Mount Gradio into FastAPI
+# Mount Gradio
 app = gr.mount_gradio_app(app, demo, path="/")
