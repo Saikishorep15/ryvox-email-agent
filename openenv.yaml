@@ -1,0 +1,6 @@
+name: ryvox-email-env
+version: 0.1.0
+entry_point: server.app:app
+env_class: server.environment:RyvoxEmailEnvironment
+engine: fastapi
+port: 8000
