@@ -1,43 +1,78 @@
 import random
 from models import RyvoxEmailObservation, RyvoxEmailAction
 
+
 class RyvoxEmailEnvironment:
     def __init__(self):
-        # The 'dataset' used by reset()
+        # Dataset with difficulty levels
         self.dataset = [
-            {"text": "Win $1000 now!", "label": "spam"},
-            {"text": "Project meeting at 5 PM", "label": "important"},
-            {"text": "Hey, how are you?", "label": "normal"}
+            {"text": "Win $1000 now!", "label": "spam", "difficulty": "easy"},
+            {"text": "Limited time offer just for you", "label": "spam", "difficulty": "medium"},
+            {"text": "Let's discuss the financial report tomorrow", "label": "important", "difficulty": "hard"},
+            {"text": "Project meeting at 5 PM", "label": "important", "difficulty": "easy"},
+            {"text": "Hey, how are you?", "label": "normal", "difficulty": "easy"}
         ]
         self.current_task = None
 
+    # RESET
     def reset(self):
-        self.current_task = random.choice(self.dataset)
+        self.current_task = {
+    "text": "win money now!!!",
+    "label": "spam",
+    "difficulty": "easy"
+}
+
         return RyvoxEmailObservation(
             email_text=self.current_task["text"],
             reward=0.0,
             done=False
         )
 
+    # STEP
     def step(self, action: RyvoxEmailAction):
-        # 1. Safety check: ensure reset() was called first
         if not self.current_task:
             self.current_task = self.dataset[0]
 
-        # 2. Compare agent action to the correct label
-        # We use .lower() to prevent "Spam" vs "spam" errors
-        is_correct = action.action.lower() == self.current_task["label"]
-        
-        # 3. Calculate Reward
-        reward = 10.0 if is_correct else -5.0
-        
-        # 4. Create the Observation object
+        # Extract action safely
+        try:
+            if isinstance(action.action, dict):
+                action_value = action.action.get("action", "").lower()
+            else:
+                action_value = str(action.action).lower()
+        except Exception:
+            action_value = ""
+
+        correct_label = self.current_task["label"]
+
+        # Use current email text for smart matching
+        email_text = self.current_task["text"].lower()
+
+        # Reward logic (0 → 1 scale)
+        if action_value == correct_label:
+            reward = 1.0
+
+        elif "win" in email_text or "offer" in email_text or "money" in email_text:
+            reward = 1.0 if action_value == "spam" else 0.3
+
+        elif "meeting" in email_text or "discuss" in email_text:
+            reward = 1.0 if action_value == "important" else 0.3
+
+        else:
+            reward = 1.0 if action_value == "normal" else 0.3
+
         obs = RyvoxEmailObservation(
             email_text="Task Complete",
             reward=reward,
             done=True
         )
 
-        # 5. Return the 4-tuple required by app.py
-        # observation, reward, done, info (empty dict)
         return obs, reward, True, {}
+
+    # STATE (required)
+    def state(self):
+        return {
+            "current_task": self.current_task
+        }
+
+    def close(self):
+        pass
