@@ -12,7 +12,6 @@ def classify_email(email):
 
     email_lower = email.lower()
 
-    # Simple logic
     if "win" in email_lower or "offer" in email_lower or "money" in email_lower:
         action_value = "spam"
     elif "meeting" in email_lower or "project" in email_lower or "discuss" in email_lower:
@@ -25,7 +24,13 @@ def classify_email(email):
 
     confidence = int(reward * 100)
 
-    result = f"{action_value.upper()} ({confidence}%)"
+    # 🔥 Styled Output
+    if action_value == "spam":
+        result = f"🚨 SPAM ({confidence}%)"
+    elif action_value == "important":
+        result = f"📌 IMPORTANT ({confidence}%)"
+    else:
+        result = f"✅ NORMAL ({confidence}%)"
 
     history.append({
         "email": email,
@@ -40,59 +45,88 @@ def clear_all():
     return "", "", []
 
 
-# 🎨 SIMPLE PROFESSIONAL CSS
+# 🎨 PREMIUM CLEAN CSS
 css = """
 body {
-    background: #0f172a;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
 }
 
+/* Center container */
 .gradio-container {
-    max-width: 900px;
+    max-width: 1100px !important;
     margin: auto;
 }
 
-textarea, input {
-    background: #1e293b !important;
-    color: white !important;
-    border-radius: 8px !important;
+/* Card look */
+#main-box {
+    background: #1e293b;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0px 0px 25px rgba(0,0,0,0.4);
 }
 
-button {
-    border-radius: 8px !important;
-    font-weight: 600;
-}
-
-button:hover {
-    opacity: 0.9;
-}
-
+/* Title */
 #title {
     text-align: center;
-    font-size: 28px;
+    font-size: 32px;
     font-weight: bold;
     color: white;
+    margin-bottom: 10px;
+}
+
+#subtitle {
+    text-align: center;
+    color: #94a3b8;
+    margin-bottom: 25px;
+}
+
+/* Input */
+textarea {
+    background: #0f172a !important;
+    color: white !important;
+    border-radius: 10px !important;
+}
+
+/* Buttons */
+button {
+    border-radius: 10px !important;
+    font-weight: bold;
+    height: 45px;
+}
+
+/* Result box */
+#result-box {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
 }
 """
 
 
 with gr.Blocks(css=css) as demo:
 
-    gr.Markdown("<div id='title'>Ryvox Email Classifier</div>")
+    with gr.Column(elem_id="main-box"):
 
-    email_input = gr.Textbox(
-        label="Email Input",
-        placeholder="Paste email content here..."
-    )
+        gr.Markdown("<div id='title'>🚀 Ryvox AI Email Classifier</div>")
+        gr.Markdown("<div id='subtitle'>Classify emails as Spam, Important, or Normal using AI logic</div>")
 
-    with gr.Row():
-        classify_btn = gr.Button("Classify", variant="primary")
-        clear_btn = gr.Button("Clear")
+        email_input = gr.Textbox(
+            label="Enter Email Content",
+            placeholder="Paste email content here...",
+            lines=4
+        )
 
-    output = gr.Textbox(label="Result")
-    history_box = gr.JSON(label="History")
+        with gr.Row():
+            classify_btn = gr.Button("🔍 Classify Email", variant="primary")
+            clear_btn = gr.Button("🧹 Clear")
 
-    classify_btn.click(classify_email, inputs=email_input, outputs=[output, history_box])
-    clear_btn.click(clear_all, outputs=[email_input, output, history_box])
+        output = gr.Textbox(label="Result", elem_id="result-box")
+
+        history_box = gr.JSON(label="📜 History")
+
+
+        classify_btn.click(classify_email, inputs=email_input, outputs=[output, history_box])
+        clear_btn.click(clear_all, outputs=[email_input, output, history_box])
 
 
 demo.launch(server_name="0.0.0.0", server_port=7860)
