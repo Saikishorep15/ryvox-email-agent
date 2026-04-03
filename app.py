@@ -2,174 +2,100 @@ from fastapi import FastAPI
 import gradio as gr
 import random
 
-# FastAPI app
 app = FastAPI()
 
-# History storage
 history = []
 
-# Keywords
 spam_words = ["offer", "win", "free", "lottery", "prize"]
 important_words = ["urgent", "asap", "meeting", "important"]
 
-# ================= AI FUNCTION =================
 def classify_email(text):
-    text_lower = text.lower()
+    t = text.lower()
 
-    spam_score = sum(word in text_lower for word in spam_words)
-    important_score = sum(word in text_lower for word in important_words)
+    spam = sum(w in t for w in spam_words)
+    imp = sum(w in t for w in important_words)
 
-    if spam_score > 0:
-        label = "🔴 Spam"
-        confidence = random.randint(85, 98)
-        reason = "Contains promotional/spam keywords"
-    elif important_score > 0:
-        label = "🟡 Important"
-        confidence = random.randint(75, 90)
-        reason = "Contains urgency-related keywords"
+    if spam:
+        label, conf, reason = "Spam", random.randint(85,98), "Spam keywords detected"
+    elif imp:
+        label, conf, reason = "Important", random.randint(75,90), "Urgency detected"
     else:
-        label = "🟢 Normal"
-        confidence = random.randint(70, 85)
-        reason = "No spam or urgency signals detected"
-
-    result = f"{label} ({confidence}%)"
-    full_output = f"{result}\n\n💡 Reason: {reason}"
+        label, conf, reason = "Normal", random.randint(70,85), "No strong signals"
 
     history.append(label)
     if len(history) > 10:
         history.pop(0)
 
-    chart_data = {
-        "🔴 Spam": history.count("🔴 Spam"),
-        "🟡 Important": history.count("🟡 Important"),
-        "🟢 Normal": history.count("🟢 Normal")
+    stats = {
+        "Spam": history.count("Spam"),
+        "Important": history.count("Important"),
+        "Normal": history.count("Normal")
     }
 
-    return full_output, chart_data
+    return f"{label} ({conf}%)\n\n{reason}", stats
 
 
-# ================= API =================
 @app.post("/classify")
 def classify_api(data: dict):
-    text = data.get("text", "")
-    result, _ = classify_email(text)
+    result, _ = classify_email(data.get("text",""))
     return {"result": result}
 
 
-# ================= UI =================
-custom_css = """
-/* BACKGROUND */
-body {
-    background: radial-gradient(circle at top, #0f172a, #020617);
-    font-family: 'Inter', sans-serif;
+# 🔥 MINIMAL PRO CSS (Purple Cow)
+css = """
+body { background:#0b0b0f; font-family:Inter,sans-serif; }
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding-top: 40px;
 }
 
-/* CONTAINER */
-.gradio-container {
-    background: transparent !important;
-}
-
-/* TITLE */
-h1 {
-    text-align: center;
-    font-size: 48px;
-    font-weight: 800;
-    background: linear-gradient(90deg, #38bdf8, #a855f7);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* GLASS CARD */
 .card {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 20px;
-    padding: 25px;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 0 40px rgba(56,189,248,0.15);
-    transition: 0.3s ease;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(168,85,247,0.2);
+    border-radius: 14px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
 }
 
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0 60px rgba(168,85,247,0.25);
+h1 {
+    text-align:center;
+    color:#a855f7;
+    font-weight:600;
 }
 
-/* INPUT */
 textarea {
-    background: rgba(0,0,0,0.6) !important;
-    color: #e2e8f0 !important;
-    border-radius: 12px !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
+    background:#050507 !important;
+    color:#e5e7eb !important;
+    border:1px solid #27272a !important;
 }
 
-/* BUTTON */
 button {
-    background: linear-gradient(135deg, #38bdf8, #a855f7);
-    border-radius: 12px !important;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
+    background:#7c3aed;
+    border-radius:8px !important;
 }
-
-button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 25px rgba(56,189,248,0.6);
-}
-
-/* OUTPUT BOX */
-textarea[readonly] {
-    background: rgba(15,23,42,0.8) !important;
-    border: 1px solid rgba(56,189,248,0.2) !important;
-}
-
-/* LABEL STYLE */
-label {
-    font-weight: 600 !important;
-    color: #cbd5f5 !important;
-}
+button:hover { background:#6d28d9; }
 """
 
-with gr.Blocks(css=custom_css) as demo:
+with gr.Blocks(css=css) as demo:
 
-    gr.Markdown("# 🤖 Ryvox AI Email Analyzer")
+    with gr.Column(elem_classes="container"):
 
-    with gr.Row():
+        gr.Markdown("# Ryvox AI")
 
-        # LEFT PANEL
-        with gr.Column(scale=1, elem_classes="card"):
-            gr.Markdown("### ✉️ Input Email")
-
-            text_input = gr.Textbox(
-                placeholder="Paste your email content here...",
-                lines=8
-            )
+        with gr.Group(elem_classes="card"):
+            text = gr.Textbox(lines=6, placeholder="Paste email...")
 
             with gr.Row():
-                analyze_btn = gr.Button("🚀 Analyze")
-                clear_btn = gr.Button("🧹 Clear")
+                btn = gr.Button("Analyze")
+                clr = gr.Button("Clear")
 
-        # RIGHT PANEL
-        with gr.Column(scale=1, elem_classes="card"):
-            gr.Markdown("### 📊 Analysis Result")
+        with gr.Group(elem_classes="card"):
+            out = gr.Textbox(label="Result")
+            stats = gr.Label(label="Stats")
 
-            result_output = gr.Textbox(lines=6)
-            chart_output = gr.Label()
+    btn.click(classify_email, text, [out, stats])
+    clr.click(lambda: ("", {}), None, [out, stats])
 
-    # ACTIONS
-    analyze_btn.click(
-        fn=classify_email,
-        inputs=text_input,
-        outputs=[result_output, chart_output],
-        show_progress=True
-    )
-
-    clear_btn.click(
-        fn=lambda: ("", {}),
-        inputs=[],
-        outputs=[result_output, chart_output]
-    )
-
-
-# Mount Gradio
 app = gr.mount_gradio_app(app, demo, path="/")
