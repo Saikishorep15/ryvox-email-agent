@@ -8,93 +8,58 @@ app_file: app.py
 pinned: false
 ---
 
+# 🚀 Ryvox Email RL Environment
 
-# 🚀 Ryvox Email Agent (OpenEnv)
+## 🎯 Problem
+Email classification is a real-world task where systems must identify spam, important, and normal emails efficiently.
 
-An AI-powered email classification environment built using the OpenEnv framework.  
-This project simulates a real-world task where an agent learns to classify emails using reward-based feedback.
+## 💡 Solution
+We built a Reinforcement Learning environment where an agent learns to classify emails based on rewards.
 
 ---
 
-## 🎯 Problem Statement
+## ⚙️ Environment Design
 
-Email classification is a real-world problem where messages must be categorized into:
+### State
+- Email text
+
+### Actions
 - Spam
 - Important
 - Normal
 
-This environment allows an AI agent to interact, learn, and improve decisions using rewards.
+### Tasks (Difficulty Levels)
+- Easy
+- Medium
+- Hard
 
 ---
 
-## ⚙️ Features
+## 🎁 Reward Function
 
-- ✅ OpenEnv API implementation (`reset()`, `step()`, `state()`)
-- ✅ Real-world email classification task
-- ✅ Reward-based learning system (0.0 → 1.0)
-- ✅ Multiple difficulty levels (easy, medium, hard)
-- ✅ FastAPI backend for agent interaction
-- ✅ Docker support for deployment
-- ✅ Hugging Face ready
+- Correct classification → **1.0**
+- Partial correct → **0.3**
+- Incorrect → **0.0**
 
 ---
 
-## 📁 Project Structure
+## 🔁 API
 
-ryvox_email_env/
-│
-├── app.py            # FastAPI server (API endpoints)
-├── environment.py    # Core environment logic
-├── models.py         # Pydantic models (Observation & Action)
-├── inference.py      # Baseline agent script
-├── openenv.yaml      # OpenEnv configuration
-├── requirements.txt  # Dependencies
-├── Dockerfile        # Deployment setup
-└── README.md         # Documentation
+- `reset(difficulty)`
+- `state()`
+- `step(action)`
 
 ---
 
-## ⚙️ Action Space
-
-The agent can take one of the following actions:
-
-- `"spam"`
-- `"important"`
-- `"normal"`
+## 🤖 Baseline Agent
+Random agent implemented in `inference.py`
 
 ---
 
-## 👁 Observation Space
-
-Each interaction returns:
-
-- `email_text` → The email content  
-- `reward` → Score based on correctness  
-- `done` → Indicates task completion  
+## 🌍 Deployment
+Deployed using FastAPI + Gradio on Hugging Face Spaces.
 
 ---
 
-## 🎯 Reward System
-
-| Condition        | Reward |
-|----------------|--------|
-| ✅ Correct      | 1.0    |
-| ⚠️ Partial      | 0.3    |
-| ❌ Incorrect    | 0.0    |
-
----
-
-## 🔄 Environment Workflow
-
-1. `reset()` → Provides a new email task  
-2. Agent reads the email  
-3. Agent selects an action  
-4. `step(action)` → Returns reward and completion status  
-
----
-
-## 🧪 Run Locally
-
-```bash
-pip install -r requirements.txt
-python inference.py
+## 🔥 Bonus
+Includes interactive UI for visualization.
