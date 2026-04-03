@@ -1,131 +1,98 @@
-from fastapi import FastAPI
 import gradio as gr
-import random
+from environment import RyvoxEmailEnvironment
+from models import RyvoxEmailAction
 
-app = FastAPI()
-
+env = RyvoxEmailEnvironment()
 history = []
 
-spam_words = ["offer", "win", "free", "lottery", "prize"]
-important_words = ["urgent", "asap", "meeting", "important"]
 
-# ================= LOGIC =================
-def classify_email(text):
-    t = text.lower()
+def classify_email(email):
+    if not email.strip():
+        return "⚠️ Please enter email text", history
 
-    spam = sum(w in t for w in spam_words)
-    imp = sum(w in t for w in important_words)
+    email_lower = email.lower()
 
-    if spam:
-        label, conf, reason = "Spam", random.randint(85,98), "Spam keywords detected"
-    elif imp:
-        label, conf, reason = "Important", random.randint(75,90), "Urgency detected"
+    # Simple logic
+    if "win" in email_lower or "offer" in email_lower or "money" in email_lower:
+        action_value = "spam"
+    elif "meeting" in email_lower or "project" in email_lower or "discuss" in email_lower:
+        action_value = "important"
     else:
-        label, conf, reason = "Normal", random.randint(70,85), "No strong signals"
+        action_value = "normal"
 
-    history.append(label)
-    if len(history) > 10:
-        history.pop(0)
+    action = RyvoxEmailAction(action=action_value)
+    obs, reward, done, _ = env.step(action)
 
-    stats = {
-        "Spam": history.count("Spam"),
-        "Important": history.count("Important"),
-        "Normal": history.count("Normal")
-    }
+    confidence = int(reward * 100)
 
-    result = f"{label} ({conf}%)\n\n{reason}"
-    return result, stats
+    result = f"{action_value.upper()} ({confidence}%)"
 
+    history.append({
+        "email": email,
+        "result": result
+    })
 
-# ================= API =================
-@app.post("/classify")
-def classify_api(data: dict):
-    result, _ = classify_email(data.get("text", ""))
-    return {"result": result}
+    return result, history
 
 
-# ================= CSS =================
+def clear_all():
+    history.clear()
+    return "", "", []
+
+
+# 🎨 SIMPLE PROFESSIONAL CSS
 css = """
 body {
-    background: #f8fafc;
-    font-family: Inter, sans-serif;
+    background: #0f172a;
 }
 
-/* CENTER CONTAINER */
-.container {
-    max-width: 700px;
+.gradio-container {
+    max-width: 900px;
     margin: auto;
-    padding-top: 60px;
 }
 
-/* TITLE */
-h1 {
-    text-align: center;
-    color: #6d28d9;
-    font-weight: 600;
-    margin-bottom: 30px;
-}
-
-/* CARD */
-.card {
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid #e5e7eb;
-    margin-bottom: 20px;
-}
-
-/* INPUT */
-textarea {
-    border-radius: 8px !important;
-    border: 1px solid #d1d5db !important;
-}
-
-/* BUTTON */
-button {
-    background: #7c3aed;
+textarea, input {
+    background: #1e293b !important;
     color: white !important;
     border-radius: 8px !important;
-    font-weight: 500;
+}
+
+button {
+    border-radius: 8px !important;
+    font-weight: 600;
 }
 
 button:hover {
-    background: #6d28d9;
+    opacity: 0.9;
 }
 
-/* OUTPUT */
-textarea[readonly] {
-    background: #f1f5f9 !important;
+#title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
 }
 """
 
-# ================= UI =================
+
 with gr.Blocks(css=css) as demo:
 
-    with gr.Column(elem_classes="container"):
+    gr.Markdown("<div id='title'>Ryvox Email Classifier</div>")
 
-        gr.Markdown("# Email Analyzer")
+    email_input = gr.Textbox(
+        label="Email Input",
+        placeholder="Paste email content here..."
+    )
 
-        # INPUT
-        with gr.Group(elem_classes="card"):
-            text = gr.Textbox(
-                lines=6,
-                placeholder="Paste email content..."
-            )
+    with gr.Row():
+        classify_btn = gr.Button("Classify", variant="primary")
+        clear_btn = gr.Button("Clear")
 
-            with gr.Row():
-                analyze = gr.Button("Analyze")
-                clear = gr.Button("Clear")
+    output = gr.Textbox(label="Result")
+    history_box = gr.JSON(label="History")
 
-        # OUTPUT
-        with gr.Group(elem_classes="card"):
-            output = gr.Textbox(label="Result", lines=5)
-            stats = gr.Label(label="Stats")
-
-    # ACTIONS
-    analyze.click(classify_email, text, [output, stats])
-    clear.click(lambda: ("", {}), None, [output, stats])
+    classify_btn.click(classify_email, inputs=email_input, outputs=[output, history_box])
+    clear_btn.click(clear_all, outputs=[email_input, output, history_box])
 
 
-# ================= MOUNT =================
-app = gr.mount_gradio_app(app, demo, path="/")
+demo.launch(server_name="0.0.0.0", server_port=7860)
