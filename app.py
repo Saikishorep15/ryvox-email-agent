@@ -1,22 +1,27 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+import gradio as gr
 
 app = FastAPI()
 
-class EmailInput(BaseModel):
-    text: str
-
-@app.get("/")
-def home():
-    return {"status": "Online", "message": "Ryvox Email Environment is running!"}
-
-@app.post("/predict")
-def predict_email(data: EmailInput):
-    text = data.text.lower()
+# 🔥 Your logic
+def classify_email(text):
+    text = text.lower()
 
     if "win" in text or "offer" in text:
-        return {"label": "spam"}
+        return "🚨 Spam"
     elif "meeting" in text or "report" in text:
-        return {"label": "important"}
+        return "📌 Important"
     else:
-        return {"label": "normal"}
+        return "✅ Normal"
+
+# 🔥 Gradio UI
+demo = gr.Interface(
+    fn=classify_email,
+    inputs=gr.Textbox(lines=4, placeholder="Enter email text here..."),
+    outputs="text",
+    title="📧 Ryvox Email Classifier",
+    description="Classify emails as Spam, Important, or Normal"
+)
+
+# 🔥 Mount Gradio into FastAPI
+app = gr.mount_gradio_app(app, demo, path="/")
