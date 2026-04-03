@@ -1,0 +1,17 @@
+[project]
+name = "ryvox-email-env"
+version = "0.1.0"
+description = "Ryvox AI Email Classification Environment"
+authors = [
+    { name = "SaiKishore P" }
+]
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "gradio"
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
