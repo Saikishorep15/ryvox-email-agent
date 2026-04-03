@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 from environment import RyvoxEmailEnvironment
@@ -39,3 +40,13 @@ def step(action: Action):
 @app.get("/")
 def root():
     return {"message": "Ryvox Email Environment Running 🚀"}
+
+# ✅ REQUIRED FOR HACKATHON
+def main():
+    return app
+
+
+# ✅ REQUIRED (VERY IMPORTANT)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("server.app:app", host="0.0.0.0", port=7860)
