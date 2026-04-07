@@ -6,14 +6,17 @@ authors = [
     { name = "SaiKishore P" }
 ]
 
+# ✅ VERY IMPORTANT
+requires-python = ">=3.10"
+
 dependencies = [
     "fastapi",
     "uvicorn",
     "pydantic",
-    "gradio",
     "openenv>=0.1.13"
 ]
 
+# ✅ CRITICAL FIX
 [project.scripts]
 server = "server.app:main"
 

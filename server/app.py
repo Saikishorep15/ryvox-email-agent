@@ -39,14 +39,12 @@ def step(action: Action):
 
 @app.get("/")
 def root():
-    return {"message": "Ryvox Email Environment Running 🚀"}
+    return {"message": "Running 🚀"}
 
 
-# ✅ REQUIRED BY OPENENV
 def main():
     return app
 
 
-# ✅ REQUIRED ENTRY POINT
 if __name__ == "__main__":
     main()
