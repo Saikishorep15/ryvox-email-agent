@@ -42,7 +42,7 @@ def root():
     return {"message": "Ryvox Email Environment Running 🚀"}
 
 
-# ✅ REQUIRED FOR OPENENV (VERY IMPORTANT)
+# ✅ REQUIRED BY OPENENV
 def main():
     return app
 
