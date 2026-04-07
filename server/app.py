@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from environment import RyvoxEmailEnvironment
 
 app = FastAPI()
+
 env = RyvoxEmailEnvironment()
 
 
@@ -42,9 +43,6 @@ def root():
     return {"message": "Running 🚀"}
 
 
+# 🔥 IMPORTANT FIX
 def main():
     return app
-
-
-if __name__ == "__main__":
-    main()
