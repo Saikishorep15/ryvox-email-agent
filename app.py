@@ -1,10 +1,10 @@
-
 from fastapi import FastAPI
 from pydantic import BaseModel
 from environment import RyvoxEmailEnvironment
 
 app = FastAPI()
 env = RyvoxEmailEnvironment()
+
 
 class Action(BaseModel):
     action: str
@@ -39,5 +39,14 @@ def step(action: Action):
 
 @app.get("/")
 def root():
-    return {"message": "Ryvox Email Environment Running 🚀"}
+    return {"message": "Running 🚀"}
 
+
+# ✅ REQUIRED
+def main():
+    return app
+
+
+# 🔥 THIS LINE IS MISSING IN YOUR CODE → ADD THIS
+if __name__ == "__main__":
+    main()
