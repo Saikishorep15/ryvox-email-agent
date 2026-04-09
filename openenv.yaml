@@ -2,10 +2,9 @@ name: ryvox-email-env
 version: 1.0.0
 
 description: >
-  A real-world email classification RL environment where an agent learns to classify
-  emails into spam, important, or normal using reward-based feedback.
+  Email classification RL environment for spam, important, and normal emails.
 
-entry_point: app:app
+entry_point: server.app:main
 env_class: environment:RyvoxEmailEnvironment
 
 engine: fastapi
@@ -30,32 +29,24 @@ observation_space:
     done:
       type: boolean
 
-# 🔹 TASK DEFINITIONS (IMPORTANT FOR JUDGES ⭐)
+# 🔥 FIXED TASKS (VALID RANGE)
 tasks:
-  - name: easy_classification
-    difficulty: easy
-    description: Identify obvious spam or normal emails
-    reward_range: [0.0, 0.3]
+  - name: spam_detection
+    description: Detect spam emails
+    reward_range: [0.1, 0.9]
 
-  - name: medium_classification
-    difficulty: medium
-    description: Identify promotional or slightly ambiguous emails
-    reward_range: [0.0, 0.6]
+  - name: priority_detection
+    description: Detect important emails
+    reward_range: [0.1, 0.9]
 
-  - name: hard_classification
-    difficulty: hard
-    description: Identify subtle important emails like reports or discussions
-    reward_range: [0.0, 1.0]
+  - name: normal_classification
+    description: Detect normal emails
+    reward_range: [0.1, 0.9]
 
-# 🔹 REWARD LOGIC (VERY IMPORTANT ⭐)
+# 🔥 FIXED GLOBAL REWARD
 reward:
-  description: >
-    Reward is given based on classification accuracy and difficulty level.
-    Correct classification yields higher reward for harder tasks.
-    Partial reward is given for semantically correct guesses.
-    Wrong classification may give negative reward.
-
-  range: [0.0, 1.0]
+  description: Reward based on classification accuracy
+  range: [0.1, 0.9]
 
 # 🔹 EVALUATION
 evaluation:
