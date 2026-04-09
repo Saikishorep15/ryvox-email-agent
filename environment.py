@@ -6,7 +6,7 @@ class RyvoxEmailEnvironment:
     def __init__(self):
         random.seed(42)
 
-        # 🔥 EXACTLY 3 TASKS (MANDATORY)
+        # 🔥 EXACTLY 3 TASKS
         self.dataset = [
             {"text": "Win $1000 now!", "label": "spam", "task": "spam_detection"},
             {"text": "Project meeting at 5 PM", "label": "important", "task": "priority_detection"},
@@ -16,15 +16,16 @@ class RyvoxEmailEnvironment:
         self.index = 0
         self.current_task = None
 
-    # 🔹 RESET (DETERMINISTIC)
+    # 🔹 RESET
     def reset(self):
         self.current_task = self.dataset[self.index % len(self.dataset)]
         self.index += 1
 
         return RyvoxEmailObservation(
             email_text=self.current_task["text"],
-            reward=0.1,   # 🔥 FIXED (must NOT be 0 or 1)
-            done=False
+            reward=0.1,
+            done=False,
+            task=self.current_task["task"]   # ✅ ADDED
         )
 
     # 🔹 STEP
@@ -39,7 +40,7 @@ class RyvoxEmailEnvironment:
 
         task_type = self.current_task["task"]
 
-        # 🔥 STRICT TASK-BASED GRADER
+        # 🔥 TASK GRADER
         if task_type == "spam_detection":
             reward = 0.85 if action_value == "spam" else 0.15
 
@@ -52,14 +53,15 @@ class RyvoxEmailEnvironment:
         else:
             reward = 0.2
 
-        # 🔥 ENSURE FLOAT + STRICT RANGE
+        # 🔥 STRICT RANGE
         reward = float(reward)
         reward = max(0.1, min(0.9, reward))
 
         obs = RyvoxEmailObservation(
             email_text="Task Complete",
             reward=reward,
-            done=True
+            done=True,
+            task=self.current_task["task"]   # ✅ VERY IMPORTANT
         )
 
         return obs, reward, True, {}
