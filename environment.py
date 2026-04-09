@@ -6,23 +6,19 @@ class RyvoxEmailEnvironment:
     def __init__(self):
         random.seed(42)
 
-        # 🔥 PROPER TASK-BASED DATASET
         self.dataset = [
             {"text": "Win $1000 now!", "label": "spam", "task": "spam_detection"},
-            {"text": "Limited time offer just for you", "label": "spam", "task": "spam_detection"},
-
             {"text": "Project meeting at 5 PM", "label": "important", "task": "priority_detection"},
-            {"text": "Client meeting tomorrow", "label": "important", "task": "priority_detection"},
-
             {"text": "Hey, how are you?", "label": "normal", "task": "normal_classification"},
-            {"text": "Lunch at 2?", "label": "normal", "task": "normal_classification"},
         ]
 
+        self.index = 0
         self.current_task = None
 
-    # RESET
+    # RESET (🔑 SEQUENTIAL TASKS)
     def reset(self):
-        self.current_task = random.choice(self.dataset)
+        self.current_task = self.dataset[self.index % len(self.dataset)]
+        self.index += 1
 
         return RyvoxEmailObservation(
             email_text=self.current_task["text"],
@@ -33,39 +29,29 @@ class RyvoxEmailEnvironment:
     # STEP
     def step(self, action: RyvoxEmailAction):
         if not self.current_task:
-            self.current_task = random.choice(self.dataset)
+            self.current_task = self.dataset[0]
 
         try:
             action_value = str(action.action).lower().strip()
         except:
             action_value = ""
 
-        correct_label = self.current_task["label"]
         task_type = self.current_task["task"]
 
-        # 🔥 TASK-SPECIFIC GRADER
+        # 🔥 STRICT TASK-BASED GRADER
         if task_type == "spam_detection":
-            if action_value == "spam":
-                reward = 0.85
-            else:
-                reward = 0.15
+            reward = 0.85 if action_value == "spam" else 0.15
 
         elif task_type == "priority_detection":
-            if action_value == "important":
-                reward = 0.85
-            else:
-                reward = 0.15
+            reward = 0.85 if action_value == "important" else 0.15
 
         elif task_type == "normal_classification":
-            if action_value == "normal":
-                reward = 0.85
-            else:
-                reward = 0.15
+            reward = 0.85 if action_value == "normal" else 0.15
 
         else:
             reward = 0.2
 
-        # 🔥 STRICT RANGE FIX
+        # 🔥 STRICT RANGE
         reward = max(0.1, min(0.9, reward))
 
         obs = RyvoxEmailObservation(

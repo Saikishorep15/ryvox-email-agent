@@ -33,16 +33,24 @@ observation_space:
 tasks:
   - name: spam_detection
     description: Detect spam emails
-    reward_range: [0.1, 0.9]
+    grader:
+      type: reward
+      min: 0.1
+      max: 0.9
 
   - name: priority_detection
     description: Detect important emails
-    reward_range: [0.1, 0.9]
+    grader:
+      type: reward
+      min: 0.1
+      max: 0.9
 
   - name: normal_classification
     description: Detect normal emails
-    reward_range: [0.1, 0.9]
-
+    grader:
+      type: reward
+      min: 0.1
+      max: 0.9
 # 🔥 FIXED GLOBAL REWARD
 reward:
   description: Reward based on classification accuracy
