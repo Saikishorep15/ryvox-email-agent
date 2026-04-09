@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 from environment import RyvoxEmailEnvironment
@@ -46,3 +47,6 @@ def root():
 # 🔥 IMPORTANT FIX
 def main():
     return app
+
+if __name__ == "__main__":
+    main()
