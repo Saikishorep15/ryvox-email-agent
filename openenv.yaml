@@ -28,6 +28,8 @@ observation_space:
       type: float
     done:
       type: boolean
+    task:           # 🔥 ADD THIS
+      type: string
 
 # 🔥 FIXED TASKS (VALID RANGE)
 tasks:

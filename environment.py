@@ -6,7 +6,6 @@ class RyvoxEmailEnvironment:
     def __init__(self):
         random.seed(42)
 
-        # 🔥 EXACTLY 3 TASKS
         self.dataset = [
             {"text": "Win $1000 now!", "label": "spam", "task": "spam_detection"},
             {"text": "Project meeting at 5 PM", "label": "important", "task": "priority_detection"},
@@ -16,7 +15,6 @@ class RyvoxEmailEnvironment:
         self.index = 0
         self.current_task = None
 
-    # 🔹 RESET
     def reset(self):
         self.current_task = self.dataset[self.index % len(self.dataset)]
         self.index += 1
@@ -25,10 +23,9 @@ class RyvoxEmailEnvironment:
             email_text=self.current_task["text"],
             reward=0.1,
             done=False,
-            task=self.current_task["task"]   # ✅ ADDED
+            task=self.current_task["task"]
         )
 
-    # 🔹 STEP
     def step(self, action: RyvoxEmailAction):
         if not self.current_task:
             self.current_task = self.dataset[0]
@@ -40,20 +37,19 @@ class RyvoxEmailEnvironment:
 
         task_type = self.current_task["task"]
 
-        # 🔥 TASK GRADER
+        # ✅ FIXED INDENTATION (INSIDE FUNCTION)
         if task_type == "spam_detection":
-            reward = 0.85 if action_value == "spam" else 0.15
+            reward = 0.8 if action_value == "spam" else 0.2
 
         elif task_type == "priority_detection":
-            reward = 0.85 if action_value == "important" else 0.15
+            reward = 0.7 if action_value == "important" else 0.3
 
         elif task_type == "normal_classification":
-            reward = 0.85 if action_value == "normal" else 0.15
+            reward = 0.9 if action_value == "normal" else 0.1
 
         else:
             reward = 0.2
 
-        # 🔥 STRICT RANGE
         reward = float(reward)
         reward = max(0.1, min(0.9, reward))
 
@@ -61,12 +57,11 @@ class RyvoxEmailEnvironment:
             email_text="Task Complete",
             reward=reward,
             done=True,
-            task=self.current_task["task"]   # ✅ VERY IMPORTANT
+            task=self.current_task["task"]
         )
 
         return obs, reward, True, {}
 
-    # 🔹 STATE
     def state(self):
         if not self.current_task:
             return {}
