@@ -66,10 +66,10 @@ def run():
     print("[START] Evaluation Started")
 
     total_reward = 0
-    episodes = 5
 
-    for i in range(episodes):
-        print(f"[STEP] Episode {i+1}")
+    # 🔥 FORCE ALL 3 TASKS (VERY IMPORTANT)
+    for i in range(3):
+        print(f"[STEP] Task {i+1}")
 
         obs = env.reset()
         email = obs.email_text
@@ -91,10 +91,24 @@ def run():
 
         total_reward += reward
 
-    final_score = total_reward / episodes
+    # 🔥 EXTRA RUNS (OPTIONAL BUT SAFE)
+    for i in range(2):
+        obs = env.reset()
+        email = obs.email_text
+
+        try:
+            action_value = get_ai_action(email)
+        except:
+            action_value = fallback_action(email)
+
+        action = RyvoxEmailAction(action=action_value)
+        obs, reward, done, _ = env.step(action)
+
+        total_reward += reward
+
+    final_score = total_reward / 5
 
     print(f"[END] Final Score: {round(final_score, 2)}")
-
 
 if __name__ == "__main__":
     run()
