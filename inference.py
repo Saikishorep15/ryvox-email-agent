@@ -8,8 +8,7 @@ client = OpenAI(
     api_key=os.environ["API_KEY"],
     base_url=os.environ["API_BASE_URL"]
 )
-
-MODEL_NAME = os.environ["MODEL_NAME"]
+MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
 
 env = RyvoxEmailEnvironment()
 
