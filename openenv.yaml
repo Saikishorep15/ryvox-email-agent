@@ -33,27 +33,26 @@ observation_space:
 
 # 🔥 FIXED TASKS (VALID RANGE)
 tasks:
-  - id: spam_detection  # Change 'name' to 'id'
+  - id: spam_detection
     description: Detect spam emails
     grader:
       type: reward
       min: 0.1
       max: 0.9
 
-  - id: priority_detection  # Change 'name' to 'id'
+  - id: priority_detection
     description: Detect important emails
     grader:
       type: reward
       min: 0.1
       max: 0.9
 
-  - id: normal_classification  # Change 'name' to 'id'
+  - id: normal_classification
     description: Detect normal emails
     grader:
       type: reward
       min: 0.1
       max: 0.9
-
 # 🔹 EVALUATION
 evaluation:
   metric: average_reward
