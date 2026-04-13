@@ -17,7 +17,7 @@ This project simulates a real-world task where an AI agent classifies emails int
 - Important
 - Normal
 
----
+--- 
 
 ## 🎯 Problem Statement
 
@@ -32,7 +32,7 @@ This environment allows an AI agent to learn and improve classification decision
 
 ## ⚙️ OpenEnv Specification
 
-✔ Typed Models (Pydantic)  
+✔ Typed Models (Pydantic)         
 ✔ step() / reset() / state() API  
 ✔ Reward-based learning  
 ✔ YAML configuration  
