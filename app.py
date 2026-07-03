@@ -6,7 +6,6 @@ from environment import RyvoxEmailEnvironment
 app = FastAPI()
 env = RyvoxEmailEnvironment()
 
-
 class Action(BaseModel):
     action: str
 
