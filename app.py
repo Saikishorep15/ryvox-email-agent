@@ -3,7 +3,6 @@ from pydantic import BaseModel
 from fastapi.responses import HTMLResponse
 from environment import RyvoxEmailEnvironment
 
-
 app = FastAPI()
 env = RyvoxEmailEnvironment()
 class Action(BaseModel):
